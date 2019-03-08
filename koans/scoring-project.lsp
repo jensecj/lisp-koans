@@ -49,9 +49,48 @@
 ;
 ; Your goal is to write the score method.
 
-(defun score (dice)
-  ; You need to write this method
-)
+;; cons the number of occurances onto each element in the list
+(defun n-occurs (l)
+  (cond
+    ((null l) '())
+    ((car l)
+     (cons (cons (car l) (count (car l) l))
+           (n-occurs (remove (car l) l))))))
+
+;; return all elements in the list where (pred ELEMENT)
+(defun select (pred l)
+  (loop for i in l
+        when (funcall pred i)
+          collect i))
+
+;; return all triplets in a list
+(defun triplets (l)
+  (let* ((occurances (n-occurs l))
+        (triplets (select (lambda (o) (>= (cdr o) 3)) occurances)))
+    (mapcar #'first triplets)))
+
+(defun score-eye (eye)
+  (case eye
+    (1 100)
+    (5 50)
+    (otherwise 0)))
+
+(defun score-triplet (tri)
+  (case tri
+    (1 1000)
+    (otherwise (* tri 100))))
+
+(defun score (rolls)
+  (let ((rolls (copy-seq rolls))
+        (triplet (car (triplets rolls)))
+        (score 0))
+    ;; theres only ever one triplet in 5 dice
+    (when triplet
+      (setf score (score-triplet triplet)
+            rolls (remove triplet rolls :count 3)))
+    (setf score (+ score (reduce #'+ (mapcar #'score-eye rolls))))
+    score))
+
 
 (define-test test-score-of-an-empty-list-is-zero
     (assert-equal 0 (score nil)))
